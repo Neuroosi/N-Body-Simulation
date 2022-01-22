@@ -1,29 +1,32 @@
-import math
 import numpy as np
 import matplotlib.pyplot as plt
 N = 100
 softening = 0.1
 np.random.seed(17)
-G = 6.674*10**(-11) # Gravitational constant
+G = 1.0 # Gravitational constant
 dt = 0.01
-masses = 20.0*np.ones((N,1))/N
+masses = 20*np.ones((N,1))/N
 positions_X = np.random.rand(N,1)
 positions_Y = np.random.rand(N,1)
 positions_Z = np.random.rand(N,1)
 Velocity_X = np.random.rand(N,1)
 Velocity_Y = np.random.rand(N,1)
 Velocity_Z = np.random.rand(N,1)
-Velocity_X -= np.mean(masses*Velocity_X,0)/np.mean(masses)
-Velocity_Y -= np.mean(masses*Velocity_Y,0)/np.mean(masses)
-Velocity_Z -= np.mean(masses*Velocity_Z,0)/np.mean(masses)
+Velocity_X -= np.mean(masses*Velocity_X)/np.mean(masses)
+Velocity_Y -= np.mean(masses*Velocity_Y)/np.mean(masses)
+Velocity_Z -= np.mean(masses*Velocity_Z)/np.mean(masses)
 
 def distance(i,j):
-    return math.sqrt(softening**2+(positions_Y[i]-positions_Y[j])**2 + (positions_X[i]-positions_X[j])**2 + (positions_Z[i]-positions_Z[j])**2)
+    return np.sqrt(softening**2+(positions_Y[i]-positions_Y[j])**2 + (positions_X[i]-positions_X[j])**2 + (positions_Z[i]-positions_Z[j])**2)
 
 def F(i,j):
-    F_x = G*masses[i]*masses[j]*(positions_X[j]- positions_X[i])/distance(i,j)**3
-    F_y = G*masses[i]*masses[j]*(positions_Y[j]- positions_Y[i])/distance(i,j)**3
-    F_z = G*masses[i]*masses[j]*(positions_Z[j]- positions_Z[i])/distance(i,j)**3
+    dist = distance(i, j)**3
+    dx = positions_X[j]-positions_X[i]
+    dy = positions_Y[j]-positions_Y[i]
+    dz = positions_Z[j]-positions_Z[i]
+    F_x = (G*masses[j]*dx)/dist
+    F_y = (G*masses[j]*dy)/dist
+    F_z = (G*masses[j]*dz)/dist
     return F_x, F_y, F_z
 
 def calculateVelocities():
@@ -38,9 +41,9 @@ def calculateVelocities():
                 a_x += Forces[0]
                 a_y += Forces[1]
                 a_z += Forces[2]
-        Velocity_X[i] += dt*a_x
-        Velocity_Y[i] += dt*a_y
-        Velocity_Z[i] += dt*a_z
+        Velocity_X[i] += a_x*dt/2
+        Velocity_Y[i] += a_y*dt/2
+        Velocity_Z[i] += a_z*dt/2
 
 def updatePositions():
     for i in range(len(masses)):
@@ -57,12 +60,10 @@ def simulate():
     for i in range(1000):
         calculateVelocities()
         updatePositions()
+        calculateVelocities()
         t += dt
         plt.sca(ax1)
-        plt.cla()
-        #xx = pos_save[:,0,max(i-50,0):i+1]
-        #yy = pos_save[:,1,max(i-50,0):i+1]
-        #plt.scatter(xx,yy,s=1,color=[.7,.7,1])
+        plt.cla() ## uncomment if u dont want to see the trails
         plt.scatter(positions_X,positions_Y,s=10,color='blue')
         ax1.set(xlim=(-2, 2), ylim=(-2, 2))
         ax1.set_aspect('equal', 'box')
@@ -70,6 +71,6 @@ def simulate():
         ax1.set_yticks([-2,-1,0,1,2])
 			
 			
-        plt.pause(0.001)
+        plt.pause(0.0000001)
 
 simulate()
